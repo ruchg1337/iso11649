@@ -1,7 +1,10 @@
 package iso11649
 
 import (
+	"errors"
 	"fmt"
+	"math/big"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -33,16 +36,29 @@ func replaceChars(input string) string {
 func calculateRfChecksum(ref string) string {
 	preResult := ref + "RF00"
 	preResult = replaceChars(preResult)
-	mod97, _ := strconv.Atoi(preResult)
-	checksum := 98 - mod97%97
+	val := new(big.Int)
+	val, _ = val.SetString(preResult, 10)
+	mod97 := big.NewInt(int64(97))
+	result := new(big.Int)
+	result = result.Mod(val, mod97)
+	res, _ := strconv.Atoi(result.String())
+	checksum := 98 - res
 	// Pad the checksum to ensure it's at least 2 digits
 	return fmt.Sprintf("%02d", checksum)
+
 }
 
-// generateRfReference generates the RF reference from the input string.
-func GenerateRfReference(input string) string {
+// GenerateReference generates the RF reference from the input string.
+func GenerateReference(input string) (string, error) {
+	if !isAlphanum(input) {
+		return "", errors.New("input is not alphanumeric")
+	}
 	normalizedRef := strings.ToUpper(strings.TrimSpace(input))
 	checksum := calculateRfChecksum(normalizedRef)
 	rfReference := "RF" + checksum + normalizedRef
-	return strings.TrimSpace(rfReference)
+	return strings.TrimSpace(rfReference), nil
+}
+
+func isAlphanum(word string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(word)
 }

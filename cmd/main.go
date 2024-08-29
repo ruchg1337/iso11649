@@ -9,11 +9,15 @@ import (
 
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Println("Usage: go run main.go <input>")
+		fmt.Println("Usage: iso11649 <input>")
 		os.Exit(1)
 	}
 
 	input := os.Args[1]
-	result := iso11649.GenerateRfReference(input)
-	fmt.Println(result)
+	reference, err := iso11649.GenerateReference(input)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+	fmt.Println(reference)
 }
